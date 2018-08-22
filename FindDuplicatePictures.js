@@ -2,12 +2,19 @@
 var fs = require("fs");
 var pHash = require('phash-imagemagick');
 
+let argv = new Array();
+process.argv.forEach((val, index) => { if (index > 1) argv.push(val) });
+
 let files = new Array();
-for (let i = 2; i < process.argv.length; i++) {
-	let fileName = process.argv[i];
-	if (fs.lstatSync(fileName).isFile())
+filesAdd = (fileName) => {
+	fileStats = fs.lstatSync(fileName);
+	if (fileStats.isFile())
 		files.push({ fileName: fileName });
+	if (fileStats.isDirectory())
+		fs.readdirSync(fileName).forEach((val) => { filesAdd(fileName + "/" + val) });
 }
+
+argv.forEach((val) => { filesAdd(val) });
 
 let result = Promise.resolve()
 files.forEach((val, index) => {
@@ -16,8 +23,7 @@ files.forEach((val, index) => {
 		return new Promise((resolve, reject) => {
 			pHash.get(val.fileName, (err, data) => {
 				val.data = data;
-				if (err)
-				{
+				if (err) {
 					val.err = err;
 					console.log("Skip file: " + val.fileName);
 				}

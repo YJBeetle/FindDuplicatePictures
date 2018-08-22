@@ -13,11 +13,11 @@ filesAdd = (fileName) => {
 	if (fileStats.isFile())
 		files.push({ fileName: fileName });
 	if (fileStats.isDirectory())
-		fs.readdirSync(fileName).forEach((value) => { filesAdd(fileName + "/" + value) });
+		fs.readdirSync(fileName).forEach((value) => { filesAdd(fileName + (fileName.charAt(fileName.length - 1) == '/' ? '' : '/') + value) });
 }
 argv.forEach((value) => { filesAdd(value) });
 
-let progressBarUpdate = ()=>{
+let progressBarUpdate = () => {
 	let progress = filesCompleted / files.length;
 	let progressText = (100 * progress).toFixed(2).toString();
 	let progressBarLen = 100;

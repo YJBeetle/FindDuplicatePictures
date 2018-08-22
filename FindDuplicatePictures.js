@@ -17,6 +17,24 @@ filesAdd = (fileName) => {
 }
 argv.forEach((value) => { filesAdd(value) });
 
+let progressBarUpdate = ()=>{
+	let progress = filesCompleted / files.length;
+	let progressText = (100 * progress).toFixed(2).toString();
+	let progressBarLen = 100;
+	let progressBarText = '';
+	while (progressText.length < 6)
+		progressText = ' ' + progressText;
+	progressBarText += ` ${progressText}% `;
+	for (let i = 0; i < progress * progressBarLen; i++) {
+		progressBarText += '█';
+	}
+	for (var i = progress * progressBarLen; i < progressBarLen; i++) {
+		progressBarText += '░';
+	}
+	progressBarText += ` (${filesCompleted}/${files.length})\r`;
+	process.stdout.write(progressBarText);
+}
+
 let numCPUs = os.cpus().length;
 let resultMain = Promise.resolve();
 let results = new Array();
@@ -34,6 +52,7 @@ for (let i = 0; i < numCPUs; i++) {
 						if (err) {
 							value.err = err;
 							console.log("Skip file: " + value.fileName + "\033[K");
+							progressBarUpdate();
 						}
 						filesCompleted++;
 						resolve();
@@ -53,21 +72,7 @@ for (let i = 0; i < numCPUs; i++) {
 resultMain = resultMain.then(() => {
 	return new Promise((resolve, reject) => {
 		let checkCompleted = () => {
-			let progress = filesCompleted / files.length;
-			let progressText = (100 * progress).toFixed(2).toString();
-			let progressBarLen = 100;
-			let progressBarText = '';
-			while (progressText.length < 6)
-				progressText = ' ' + progressText;
-			progressBarText += ` ${progressText}% `;
-			for (let i = 0; i < progress * progressBarLen; i++) {
-				progressBarText += '█';
-			}
-			for (var i = progress * progressBarLen; i < progressBarLen; i++) {
-				progressBarText += '░';
-			}
-			progressBarText += ` (${filesCompleted}/${files.length})\r`;
-			process.stdout.write(progressBarText);
+			progressBarUpdate();
 			if (resultsCompleted >= results.length && filesCompleted >= files.length) {
 				process.stdout.write("\n");
 				resolve();

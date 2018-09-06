@@ -36,12 +36,9 @@ let progressBarUpdate = () => {
 }
 
 let numCPUs = os.cpus().length;
-let resultMain = Promise.resolve();
 let results = new Array();
-let resultsCompleted = 0;
 for (let i = 0; i < numCPUs; i++) {
 	let result = Promise.resolve();
-	results.push(result);
 	files.forEach((value, index) => {
 		result = result.then(() => {
 			if (!value.lock) {
@@ -52,9 +49,9 @@ for (let i = 0; i < numCPUs; i++) {
 						if (err) {
 							value.err = err;
 							console.log("Skip file: " + value.fileName + "\033[K");
-							progressBarUpdate();
 						}
 						filesCompleted++;
+						progressBarUpdate();
 						resolve();
 					})
 				})
@@ -64,27 +61,12 @@ for (let i = 0; i < numCPUs; i++) {
 			}
 		})
 	})
-	result.then(() => {
-		resultsCompleted++;
-	});
+	results.push(result);
 }
 
-resultMain = resultMain.then(() => {
-	return new Promise((resolve, reject) => {
-		let checkCompleted = () => {
-			progressBarUpdate();
-			if (resultsCompleted >= results.length && filesCompleted >= files.length) {
-				process.stdout.write("\n");
-				resolve();
-			}
-			else {
-				setTimeout(checkCompleted, 500);
-			}
-		}
-		checkCompleted();
-	})
-})
+let resultMain = Promise.all(results);
 resultMain.then(() => {
+	process.stdout.write("\n");
 	for (let index1 = 0; index1 < files.length; index1++) {
 		for (let index2 = index1 + 1; index2 < files.length; index2++) {
 			let value1 = files[index1];
